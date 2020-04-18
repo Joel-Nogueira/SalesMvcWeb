@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using SalesWebMvc.Services.Exceptions;
 
 namespace SalesWebMvc.Services
 {
@@ -39,6 +40,28 @@ namespace SalesWebMvc.Services
             Seller seller = _context.Seller.Find(id);
             _context.Seller.Remove(seller);
             _context.SaveChanges();
+        }
+
+        public void Update(Seller seller)
+        {
+            if (!SellerIsRegistered(seller))
+            {
+                throw new NotFoundException("Id not found.");
+            }
+            try
+            {
+                _context.Update(seller);
+                _context.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                throw new DbConcurrencyException(e.Message);
+            }
+        }
+
+        private bool SellerIsRegistered(Seller seller)
+        {
+            return _context.Seller.Any(x => x.Id == seller.Id);
         }
     }
 }
